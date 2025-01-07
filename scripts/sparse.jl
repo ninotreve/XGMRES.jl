@@ -2,8 +2,8 @@
 # Author: Bastien Vieublé
 # Email: bastien.vieuble@amss.ac.cn
 # Github: https://github.com/bvieuble/XGMRES.jl
-# COMMAND: sh scripts/scripts.sh sparse_example.jl 
-# OR julia --project=$PATH_TO_ROOT sparse_example.jl
+# COMMAND: sh scripts/scripts.sh sparse.jl 
+# OR julia --project=$PATH_TO_ROOT sparse.jl
 
 using XGMRES, SparseArrays, LinearAlgebra, Quadmath, Random, Printf, BFloat16s,
       MatrixMarket, SuiteSparseMatrixCollection;

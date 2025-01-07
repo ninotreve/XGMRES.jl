@@ -282,11 +282,7 @@ function xconvert(
     end
 end
 
-"""
-```julia
-    collect_stats(dict_lists, dict)
-```
-"""
+
 function collect_stats(dict_lists, dict)
     for (key, value) in dict
         if haskey(dict_lists, key)
@@ -298,11 +294,6 @@ function collect_stats(dict_lists, dict)
     end
 end
 
-"""
-```julia
-isnan(x::AbstractVector)
-```
-"""
 function isnan(x::AbstractVector)
     found = false
     for i = 1:size(x, 1)
@@ -314,13 +305,6 @@ function isnan(x::AbstractVector)
     found
 end
 
-"""
-```
-BFloat16(num::Float128)
-```
-Conversion of quadruple precision number to bfloat number. The conversion is 
-not supported natively.
-"""
 function BFloat16s.BFloat16(num::Float128)
     return BFloat16(Float32(num));
 end

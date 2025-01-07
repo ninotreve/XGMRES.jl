@@ -1,10 +1,7 @@
 # File: XGMRES.jl
 # Author: Bastien Vieublé
-# Email: bastien.vieuble@irit.fr
+# Email: bastien.vieuble@amss.ac.cn
 # Github: https://github.com/bvieuble/XGMRES.jl
-# Description: Module containing a mixed precision preconditioned GMRES using 
-# arbitrary preconditioner and precisions. The code is not particularly
-# optimized and is intended to be used only for numerical purpose. 
 
 module XGMRES
 

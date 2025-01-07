@@ -2,8 +2,8 @@
 # Author: Bastien Vieublé
 # Email: bastien.vieuble@amss.ac.cn
 # Github: https://github.com/bvieuble/XGMRES.jl
-# COMMAND: sh scripts/scripts.sh dense_example.jl 
-# OR julia --project=$PATH_TO_ROOT dense_example.jl
+# COMMAND: sh scripts/scripts.sh dense.jl 
+# OR julia --project=$PATH_TO_ROOT dense.jl
 
 using XGMRES, Quadmath, Random, LinearAlgebra, Printf, BFloat16s;
 
@@ -42,5 +42,3 @@ xcompₜ = xconvert(q, xcomp);
 @printf("final bkw = %5e --- final fwd = %5e \n", norm(Aₜ * xcompₜ - bₜ, Inf) /
         (norm(Aₜ, Inf) * norm(xexactₜ, Inf) + norm(bₜ, Inf)), 
         norm(xcompₜ - xexactₜ, Inf) / norm(xexactₜ, Inf));
-
-
