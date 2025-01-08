@@ -5,7 +5,7 @@ of preconditioners for the solution of square general linear systems. It is the
 companion code of the academic article "Mixed precision preconditioning 
 strategies for GMRES".
 
-A simple HTML documentation is available in `docs/build`.
+A small HTML documentation is available in `docs/build`.
 
 ## How to use
 
@@ -19,10 +19,17 @@ To go further, other parameters are fine-tuneable, including the
 precisions at which the operations are performed. The complete list of the 
 parameters is provided in the function documentation.
 
-The `scripts/dense.jl` and `scripts/sparse.jl` files in his repo are good
-example of applications of the function. They can also be used to reproduce and
-check the results presented in (most of) the plots of the article. These
-scripts can be conveniently run in the background with the Bash command
+The `scripts/dense.jl` and `scripts/sparse.jl` files in this repo are good
+examples of applications of the function. The first script runs `xgmres` on a
+random dense synthetic problem generated with target condition numbers for $A$ 
+and for the preconditioner. The second script loads a SuiteSparse matrix and 
+runs `xgmres` on this problem with one of our built-in preconditioner. These
+files can
+also be used to reproduce or check the results presented in (most of) the plots
+of the article. 
+
+These scripts can be conveniently run in the background with 
+the Bash commands
 ```bash
 sh ./scripts/scripts.sh dense.jl
 sh ./scripts/scripts.sh sparse.jl
@@ -34,7 +41,7 @@ julia --project=. scripts/sparse.jl
 ```
 ## Disclaimers
 
-The sole purpose of the XGMRES.jl GitHub repo is to provide the various
+The sole purpose of the XGMRES.jl GitHub repo is to provide the 
 Julia scripts used to generate the numerical results of the academic paper
 "Mixed precision preconditioning strategies for GMRES". This code WON'T BE 
 MAINTAINED and won't be made available through the Julia package repository.
