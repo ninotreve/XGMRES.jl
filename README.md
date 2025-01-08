@@ -23,7 +23,7 @@ The `scripts/dense.jl` and `scripts/sparse.jl` files in this repo are good
 examples of applications of the function. The first script runs `xgmres` on a
 random dense synthetic problem generated with target condition numbers for $A$ 
 and for the preconditioner. The second script loads a SuiteSparse matrix and 
-runs `xgmres` on this problem with one of our built-in preconditioner. These
+runs `xgmres` on this problem with one of our built-in preconditioners. These
 files can
 also be used to reproduce or check the results presented in (most of) the plots
 of the article. 
@@ -42,7 +42,7 @@ julia --project=. scripts/sparse.jl
 ## Disclaimers
 
 The sole purpose of the XGMRES.jl GitHub repo is to provide the 
-Julia scripts used to generate the numerical results of the academic paper
+Julia code used to generate the numerical results of the academic paper
 "Mixed precision preconditioning strategies for GMRES". This code WON'T BE 
 MAINTAINED and won't be made available through the Julia package repository.
 Hence, we advise people looking for a reliable, standard, and performant Julia 
