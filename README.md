@@ -9,7 +9,7 @@ A simple HTML documentation is available in `docs/build`.
 
 ## How to use
 
-Using [`xgmres`](@ref) can be as simple as writing
+Using the function `xgmres` can be as simple as writing
 ```julia
 A = rand(100,100)
 b = rand(100)
@@ -17,7 +17,7 @@ x = xgmres(A,b)
 ```
 To go further, other parameters are fine-tuneable, including the 
 precisions at which the operations are performed. The complete list of the 
-parameters is provided in the function doc [`xgmres`](@ref).
+parameters is provided in the function documentation.
 
 The `scripts/dense.jl` and `scripts/sparse.jl` files in his repo are good
 example of applications of the function. They can also be used to reproduce and
