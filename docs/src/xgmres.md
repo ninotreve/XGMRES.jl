@@ -2,13 +2,12 @@
 
 The [`xgmres`](@ref) solver, combined with a given preconditioner, can make
 use of up to six different floating point arithmetics. For
-the sake of readability, we use the following set of notations
-to identify easily the arithmetics at which the variables are stored and the 
-operations are performed. These notations are consistent accross this 
-documentation and the source code. You can find below a table listing the 
-operations performed in independent floating point arithmetics, the name we 
-give to the associated floating point datatype, and the subscript use for the 
-variables.
+the sake of readability, we use the following set of consistent notations
+to identify easily the precision at which a given variable is stored and an
+operation is performed. These notations are consistent accross this 
+documentation and the source code. You can find below a table listing the
+different operations, their associated floating point datatype, and the 
+subscript used for this floating point datatype.
 
 | Operations | Floating point datatype | Subscript |
 |:----------------|:-------|:------|
@@ -20,7 +19,7 @@ variables.
 | Rest of the GMRES operations | ``u_s`` | `s` |
 
 For instance, if a variable is noted `varₓ`, this variable is stored in
-precision ``u_x`` and is probably associated to the preconditioner computation.
+precision ``u_x`` and is likely associated to the preconditioner computation.
 
 The floating point arithmetic ``u`` is also refered to as the *working
 precision*. This is the arithmetic at which the solution `x` of 
@@ -28,7 +27,7 @@ precision*. This is the arithmetic at which the solution `x` of
 it is not pertinent to make a distinction between different floating point
 arithmetics. Similarly, we do not add subscript to a variable in those cases.
 
-Finally, in some parts of the code we refer to variables explicitely stored in 
+Finally, in some parts of the code we refer to variables explicitly stored in 
 `Float64` or `Float128` (through the 
 [Quadmath](https://github.com/JuliaMath/Quadmath.jl) package). For those cases
 we use the following subscripts.

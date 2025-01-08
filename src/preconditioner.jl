@@ -461,13 +461,8 @@ provided in this package.
     diagonal can fail.
 
 !!! note "Left and right preconditioner"
-    Note that depending on if left or right preconditioning is used, the 
+    Depending on if left or right preconditioning is used, the
     preconditioner itself is not computed in the same way.
-
-!!! note "Default parameters"
-    The default settings for β and α are the one advertised in the article 
-    "Mixed Precision Iterative Refinement with Sparse Approximate Inverse 
-    Preconditioning".
 """
 function create_precond_spai(
         A     ::Union{AbstractSparseMatrix{Tv,Ti},

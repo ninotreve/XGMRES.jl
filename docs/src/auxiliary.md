@@ -2,7 +2,7 @@
 
 A set of additional functions that handle various subsidiary tasks, such as the
 conversion of various datatype in different floating point arithmetics or the
-generation of dummy problems.
+generation of synthetic problems.
 
 ## Conversion of datatypes
 

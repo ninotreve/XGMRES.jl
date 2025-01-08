@@ -58,8 +58,8 @@ The precisions ``u_r`` and ``u``  concern, respectively, the precisions at
 which the residual (step 1) and the update of the solution (step 3) are 
 computed. The precision ``u_s`` is the precision at which all the operations of
 the inner GMRES, except the preconditioned matrix-vector product, are computed
-(step 2). The preconditioned matrix-vector product should be provided to the 
-function via the `precond` parameter.
+(step 2). The preconditioned matrix-vector product should be provided through 
+the `precond` parameter.
 
 !!! note "Preconditioned matrix-vector product"
     The preconditioned matrix-vector product can use its own set of precisions 
@@ -117,8 +117,6 @@ impossible to compute.
     The stat mode increases substantially the resource comsumption and is only 
     relevant for numerical study of the algorithm. It is not intended to be 
     used in practice.
-
-!!!TODO: DEFINE THE STAT STRUCTURE!!!
 
 **Input arguments**
 
