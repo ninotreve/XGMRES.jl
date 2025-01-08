@@ -157,7 +157,7 @@ impossible to compute.
 function xgmres(
     A::AbstractMatrix{TA},
     b::AbstractVector{TB};
-    precond::Preconditioner=nothing,
+    precond::Union{Preconditioner,Nothing}=nothing,
     kind::String="left",
     xexact::Union{Vector{TX},Nothing}=nothing,
     maxrestrt::Union{Integer,Nothing}=nothing,

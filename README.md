@@ -13,7 +13,7 @@ Using the function `xgmres` can be as simple as writing
 ```julia
 A = rand(100,100)
 b = rand(100)
-x = xgmres(A,b)
+x, _ = xgmres(A,b)
 ```
 To go further, other parameters are fine-tuneable, including the 
 precisions at which the operations are performed. The complete list of the 
