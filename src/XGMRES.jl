@@ -108,10 +108,9 @@ Through the parameter `do_stats`, it can be asked to the function to compute
 the backward errors of the original system \$Ax=b\$ for each iteration of GMRES. 
 The forward errors are also computed if the exact solution of the system is 
 provided through the parameter `xexact`. The condition numbers of the 
-preconditioner and the preconditioned matrix can also be computed through 
-another parameter `do_κ`. It lets the possibility to compute the `do_stats` 
-advanced errors on systems where the condition number is too expensive or 
-impossible to compute.
+preconditioner \$M\$ and the preconditioned matrix \$AM\$ or \$MA\$ can also be computed through 
+another parameter `do_κ`. In cases where the condition number is too
+expensive or impossible to compute, `do_κ` can be set to `false`.
 
 !!! warning "Stats mode"
     The stat mode increases substantially the resource comsumption and is only 
@@ -244,12 +243,10 @@ function xgmres(
     fwd = Float64[]
     bkwall = Float64[]
     fwdall = Float64[]
-    precbkw = Float64[]
     bnrmInf = xconvert(uᵣ, norm(b, Inf))
     AnrmInf = xconvert(uᵣ, opnorm(A, Inf))
     stats = Dict("cvg" => 0,
         "gmresits" => Int32[],
-        "precbkw" => Float64[],
         "err" => Float64[],
         "m" => m,
     )
@@ -287,6 +284,9 @@ function xgmres(
                     error("ERROR: Error while computing κ(M).\n")
                 end
             end
+            @printf("Condition numbers of M and MA: \n")
+            @printf("κ(M) = %.2e --- κ(MA) = %.2e \n\n", stats["K(M)"], 
+                    stats["K(MA)"])
         else
             AM = precond.AM()
             M = precond.M()
@@ -312,6 +312,9 @@ function xgmres(
                     error("ERROR: Error while computing κ(M).\n")
                 end
             end
+            @printf("Condition numbers of M and AM: \n")
+            @printf("κ(M) = %.2e --- κ(AM) = %.2e \n\n", stats["K(M)"], 
+                    stats["K(AM)"])
         end
     else
         # For convenience, if the do_κ is not activated we still initialize the 
@@ -340,8 +343,7 @@ function xgmres(
                     Inf) / norm(xexact, Inf)))
             if (verbose)
                 @printf("restrt: %2d --- bkw = %.5e --- fwd = %.5e ", iter,
-                    bkw[end],
-                    fwd[end])
+                    bkw[end], fwd[end])
                 @printf("--- gmresits = %d\n", nit - tmp)
                 tmp = nit
             end
@@ -459,25 +461,18 @@ function xgmres(
                                                xconvert(eltype(xexact), x_stats), Inf) /
                                           norm(xexact, Inf)))
                 end
-
-                # Compputation of the backward error of the preconditioned 
-                # system.
-                prec_bkw = abs(sₛ[i+1]) * xconvert(uₛ, rnrmInf) /
-                           xconvert(uₛ, (AprecnrmInf * xnrmInf + bprecnrmInf))
-                push!(precbkw, xconvert(Float64, prec_bkw))
             end
 
             if (verbose && do_stats && xexact !== nothing)
-                @printf("       ---> it: %2d --- err = %.5e --- prec bkw = \
-                        %.5e --- bkw = %.5e --- fwd = %.5e \n",
-                    i, err, precbkw[end], bkwall[end], fwdall[end])
+                @printf("       ---> it: %2d --- tol err = %.5e --- bkw = %.5e \
+                        --- fwd = %.5e \n", i, err, bkwall[end], 
+                        fwdall[end])
             elseif (verbose && do_stats)
-                @printf("       ---> it: %2d --- err = %.5e --- prec bkw = \
-                        %.5e --- bkw = %.5e \n",
-                    i, err, precbkw[end], bkwall[end])
+                @printf("       ---> it: %2d --- tol err = %.5e --- bkw = %.5e \n",
+                        i, err, bkwall[end])
             elseif (verbose)
-                @printf("       ---> it: %2d --- err = %.5e \n",
-                    i, err)
+                @printf("       ---> it: %2d --- tol err = %.5e \n",
+                        i, err)
             end
 
             if (err <= τ) # Stopping criterion
@@ -518,8 +513,6 @@ function xgmres(
     stats["fwd"] = fwd
     pushfirst!(stats["err"], 1) # The first err is missing, add 1 arbitrarily.
     if do_stats
-        pushfirst!(precbkw, 1.0) # The first precbkw is missing, add 1 arbitrarily.
-        stats["precbkw"] = precbkw
         pushfirst!(bkwall, bkw[1]) # The first bkw is missing, add it.
         stats["bkwall"] = bkwall
         if xexact !== nothing

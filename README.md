@@ -2,14 +2,15 @@
 
 This Julia package provides a mixed precision GMRES implementation with its set
 of preconditioners for the solution of square general linear systems. It is the
-companion code of the academic article "Mixed precision preconditioning 
-strategies for GMRES".
+companion code of the academic article "Mixed precision strategies for 
+preconditioned GMRES: a comprehensive analysis".
 
-A small HTML documentation is available in `docs/build`.
+A small HTML documentation is available in the `docs/build` directory.
 
 ## How to use
 
-Using the function `xgmres` can be as simple as writing
+The package feature one main mixed precision GMRES function: `xgmres`. Using 
+`xgmres` can be as simple as writing
 ```julia
 A = rand(100,100)
 b = rand(100)
@@ -17,16 +18,16 @@ x, _ = xgmres(A,b)
 ```
 To go further, other parameters are fine-tuneable, including the 
 precisions at which the operations are performed. The complete list of the 
-parameters is provided in the function documentation.
+parameters is provided in the function documentation that you can check at 
+`docs/build`.
 
 The `scripts/dense.jl` and `scripts/sparse.jl` files in this repo are good
 examples of applications of the function. The first script runs `xgmres` on a
 random dense synthetic problem generated with target condition numbers for $A$ 
-and for the preconditioner. The second script loads a SuiteSparse matrix and 
+and for the preconditioner $M$. The second script loads a SuiteSparse matrix and 
 runs `xgmres` on this problem with one of our built-in preconditioners. These
-files can
-also be used to reproduce or check the results presented in (most of) the plots
-of the article. 
+files can also be used to reproduce or check the results presented in (most of)
+the plots of the article. 
 
 These scripts can be conveniently run in the background with 
 the Bash commands
@@ -36,14 +37,15 @@ sh ./scripts/scripts.sh sparse.jl
 ```
 or launch directly with Julia from the root of the project
 ```bash
-julia --project=. scripts/sparse.jl
+julia --project=. scripts/dense.jl
 julia --project=. scripts/sparse.jl
 ```
 ## Disclaimers
 
 The sole purpose of the XGMRES.jl GitHub repo is to provide the 
 Julia code used to generate the numerical results of the academic paper
-"Mixed precision preconditioning strategies for GMRES". This code WON'T BE 
+"Mixed precision strategies for 
+preconditioned GMRES: a comprehensive analysis". This code WON'T BE 
 MAINTAINED and won't be made available through the Julia package repository.
 Hence, we advise people looking for a reliable, standard, and performant Julia 
 implementation of GMRES to use the more mature 

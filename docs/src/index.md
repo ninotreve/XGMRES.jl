@@ -43,7 +43,7 @@ sh ./scripts/scripts.sh sparse.jl
 ```
 or launch directly with Julia from the root of the project
 ```bash
-julia --project=. scripts/sparse.jl
+julia --project=. scripts/dense.jl
 julia --project=. scripts/sparse.jl
 ```
 

@@ -12,7 +12,7 @@ struct Preconditioner
     MA  ::Function   # Function computing M * A (useful in do_stats mode)
     AM  ::Function   # Function computing A * M (useful in do_stats mode)
     M   ::Function   # Function forming explicitely M^(-1) (useful in do_stats \
-                     # mode)
+                       mode)
 end
 ```
 A structure that describes the preconditioner interface of this package. Each 

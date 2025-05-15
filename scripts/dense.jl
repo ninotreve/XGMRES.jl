@@ -25,7 +25,7 @@ bₜ = Aₜ * xexactₜ;
 
 # Combination of precisions and preconditioning techniques
 u, uᵣ, uₛ, uₘ, uₐ = [d q s s s];
-kind = "flexible";
+kind = "left";
 bstop = Float64(eps(u)); fstop = Float64(eps(u)) * 100
 
 # Generate the preconditioner
