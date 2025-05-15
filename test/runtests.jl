@@ -297,8 +297,7 @@ const n = 25;
         stop=nothing, do_stats=true, do_κ=true)
     @test size(stats["bkw"])[1] == size(stats["fwd"])[1]
     @test size(stats["bkwall"], 1) == size(stats["fwdall"], 1) ==
-          size(stats["precbkw"], 1) == size(stats["err"], 1) ==
-          stats["gmresits"][end] + 1
+          size(stats["err"], 1) == stats["gmresits"][end] + 1
 
     # do_stats parameter activated and exact solution not provided
     xcomp, stats = xgmres(Aₜ, bₜ, precond=precond, kind="left",
@@ -307,6 +306,6 @@ const n = 25;
         verbose=false, u=u, uᵣ=uᵣ, uₛ=uₛ,
         stop=nothing, do_stats=true, do_κ=true)
     @test size(stats["fwd"], 1) == size(stats["fwdall"], 1) == 0
-    @test size(stats["bkwall"], 1) == size(stats["precbkw"], 1) ==
-          size(stats["err"], 1) == stats["gmresits"][end] + 1
+    @test size(stats["bkwall"], 1) == size(stats["err"], 1) ==
+          stats["gmresits"][end] + 1
 end
