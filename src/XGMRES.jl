@@ -71,41 +71,19 @@ The algorithm is composed of two imbricated loops: the outer restart loop and
 the inner GMRES iterations.
 The restart loop is stopped if:
   * We reached the maximum number of restart iterations `maxrestrt`.
-  * We observe no significant error reduction over three consecutives
-    iterations. This is quantified
-    by the parameter `stop` which defines the maximum acceptable ratio between
-    the forward errors of two consecutive iterations.
-  * We reached the expected accuracies on the forward and backward errors
-    defined by the parameters `fstop` and `bstop`.
-If the parameter `xexact` is not provided, the forward error is not computed,
-and the above stopping criterion are solely based on the computed backward
-error. The backward and forward error of the linear system are computed,
-respectively, as follows:
-
-\$\\frac{||Ax_i-b||_{\\infty}}{||A||_{\\infty}||x_i||_{\\infty} +
-||b||_{\\infty}},\$
-
-\$\\frac{||x_i - x||_{\\infty}}{||x||_{\\infty}}.\$
+  * Residual is less than tolerance.
 
 The inner GMRES loop is stopped if:
   * We reached the maximum number of GMRES iterations `m`.
-  * The backward error of the preconditioned system ``Ad_i=r_i`` falls below a
-    given tolerance defined by the paramter `τ`.
-
-The backward error of the preconditioned system is computed as follows:
-
-\$\\frac{||M^{-1}(Ad_{i,j} - r_i/||r_i||_{\\infty})||_{\\infty}}{||M^{-1}r_i/
-||r_i||_{\\infty}||_{\\infty}} \\qquad \\text{(left-preconditioned)}\$
-
-\$\\frac{||Ad_{i,j} - r_i/||r_i||_{\\infty})||_{\\infty}}{||r_i/
-||r_i||_{\\infty}||_{\\infty}} \\qquad \\text{(right-preconditioned)}\$
+  * Residual is less than tolerance.
+  * Residual is not decreasing.
 
 !!! note "Right-preconditioned backward error"
     The backward error of the right-preconditioned system is the backward error
     of the original system ``A d_i = r_i/||r_i||_{\\infty}``.
 
 Through the parameter `do_stats`, it can be asked to the function to compute
-the backward errors of the original system \$Ax=b\$ for each iteration of GMRES.
+the residual of the original system \$Ax=b\$ for each iteration of GMRES.
 The forward errors are also computed if the exact solution of the system is
 provided through the parameter `xexact`. The condition numbers of the
 preconditioner \$M\$ and the preconditioned matrix \$AM\$ or \$MA\$ can also be computed through
@@ -241,8 +219,10 @@ function xgmres(
     err = 1.0
     bkw = Float64[]
     fwd = Float64[]
+    res = Float64[]
     bkwall = Float64[]
     fwdall = Float64[]
+    resall = Float64[]
     bnrmInf = xconvert(uᵣ, norm(b, Inf))
     AnrmInf = xconvert(uᵣ, opnorm(A, Inf))
     stats = Dict("cvg" => 0,
@@ -354,12 +334,14 @@ function xgmres(
         else
             xnrmInf = xconvert(uᵣ, norm(xᵣ, Inf))
             push!(bkw, rnrmInf / (AnrmInf * xnrmInf + bnrmInf))
+            push!(res, norm(rᵣ)/norm(bᵣ))
             if (verbose)
-                @printf("restrt: %2d --- bkw = %.5e --- gmresits = %d\n",
-                    iter, bkw[end], nit - tmp)
+                @printf("restrt: %2d --- bkw = %.5e, res = %.5e --- gmresits = %d\n",
+                    iter, bkw[end], res[end], nit - tmp)
                 tmp = nit
             end
-            if (bkw[end] <= bstop)
+            # if (bkw[end] <= bstop)
+            if (res[end] <= τ)
                 stats["cvg"] = 1
                 break
             end
@@ -455,6 +437,8 @@ function xgmres(
                     xconvert(Float64, norm(Aᵣ * xconvert(uᵣ, x_stats)
                                            -
                                            bᵣ, Inf) / (AnrmInf * xnrmInf + bnrmInf)))
+                push!(resall,
+                    xconvert(Float64, norm(Aᵣ * xconvert(uᵣ, x_stats) - bᵣ) / norm(bᵣ)))
                 if xexact !== nothing
                     push!(fwdall,
                         xconvert(Float64, norm(xexact -
@@ -468,14 +452,14 @@ function xgmres(
                         --- fwd = %.5e \n", i, err, bkwall[end],
                         fwdall[end])
             elseif (verbose && do_stats)
-                @printf("       ---> it: %2d --- tol err = %.5e --- bkw = %.5e \n",
-                        i, err, bkwall[end])
+                @printf("       ---> it: %2d --- tol err = %.5e --- bkw = %.5e, res = %.5e \n",
+                        i, err, bkwall[end], resall[end])
             elseif (verbose)
-                @printf("       ---> it: %2d --- tol err = %.5e \n",
+                @printf("       ---> it: %2d --- tol err = %.5e\n",
                         i, err)
             end
 
-            if (err <= τ) # Stopping criterion
+            if length(resall) >= 2 && (resall[end] <= τ || resall[end] > resall[end-1])
                 yₛ = Hₛ[1:i, 1:i] \ sₛ[1:i]
                 if kind == "left"
                     addvec = Vₛ[:, 1:i] * yₛ

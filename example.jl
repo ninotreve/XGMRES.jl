@@ -1,9 +1,21 @@
 using Pkg; Pkg.activate(".")
 using XGMRES, LinearAlgebra, MUMPS, MatrixMarket, MPI, SparseArrays
 
-path = expanduser("~/SC25/data/matrix12.mtx")
-A = MatrixMarket.mmread(path)
+# 设置问题编号，例如 3 表示 solverchallenge25_03
+id = 3
+suffix = lpad(id, 2, '0')  # 确保是两位数格式
 
+# 拼接路径
+base_path = expanduser("~/SC25/data/")
+mtx_path = base_path * "solverchallenge25_$suffix.mtx"
+rhs_path = base_path * "solverchallenge25_$suffix.rhs"
+# mtx_path = base_path * "matrix12.mtx"
+# rhs_path = base_path * "ones12.rhs"
+
+# 读取稀疏矩阵
+A = MatrixMarket.mmread(mtx_path)
+
+# 读取右端项向量
 function read_rhs_vector(path::AbstractString)
     lines = readlines(path)
     n = parse(Int, lines[1])
@@ -11,8 +23,7 @@ function read_rhs_vector(path::AbstractString)
     return b
 end
 
-b_path = expanduser("~/SC25/data/ones12.rhs")
-b = read_rhs_vector(b_path)
+b = read_rhs_vector(rhs_path)
 
 MPI.Init()
 mumps = Mumps{Float64}(mumps_unsymmetric, default_icntl, default_cntl64)

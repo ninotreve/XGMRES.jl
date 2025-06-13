@@ -47,7 +47,7 @@ b = read_rhs_vector(rhs_path)
 # u_m: apply preconditioner
 # u_a: apply matrix (A * v)
 # u_s: rest of gmres
-u, uₓ, uᵣ, uₘ, uₐ, uₛ = [d d d d d d];
+u, uₓ, uᵣ, uₘ, uₐ, uₛ = [q d q d q q];
 kind = "left";
 bstop = Float64(eps(u)); fstop = Float64(eps(u)) * 100
 
@@ -57,8 +57,8 @@ n = size(A)[1]
 
 # Call xgmres
 x, stats = xgmres(A, b, precond=precond, kind=kind, xexact=nothing,
-                      maxrestrt=20, m=nothing, bstop=bstop, fstop=fstop,
-                      τ=1e-6, verbose=true, u=u, uᵣ=uᵣ, uₛ=uₛ, stop=0.9,
+                      maxrestrt=10, m=nothing, bstop=bstop, fstop=fstop,
+                      τ=1e-8, verbose=true, u=u, uᵣ=uᵣ, uₛ=uₛ, stop=nothing,
                       do_stats=true, do_κ=false, maxmem=30 * 1e9);
 
 # Print errors

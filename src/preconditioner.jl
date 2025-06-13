@@ -696,6 +696,7 @@ function create_precond_mumps(
 
     MPI.Init()
     mumps = Mumps{uₓ}(mumps_unsymmetric, default_icntl, default_cntl64)
+    MUMPS.set_icntl!(mumps,4,0)
     associate_matrix!(mumps, A)
     factorize!(mumps)
 
@@ -705,6 +706,7 @@ function create_precond_mumps(
         else
             dict = Dict();
         end
+        MUMPS.set_job!(mumps,2)
         associate_rhs!(mumps, x)
         MUMPS.solve!(mumps)
         z = get_solution(mumps)
@@ -717,6 +719,7 @@ function create_precond_mumps(
         else
             dict = Dict();
         end
+        MUMPS.set_job!(mumps,2)
         associate_rhs!(mumps, x)
         MUMPS.solve!(mumps)
         z = get_solution(mumps)
@@ -732,6 +735,7 @@ function create_precond_mumps(
         end
         xₐ = Aₐ * xconvert(uₐ, x)
         x = xconvert(uₓ, xₐ)
+        MUMPS.set_job!(mumps,2)
         associate_rhs!(mumps, x)
         MUMPS.solve!(mumps)
         z = get_solution(mumps)
