@@ -13,7 +13,7 @@ function iterative_refinement_mumps(A::SparseMatrixCSC{Float64,Int},
     # 初始化 MPI 和 MUMPS
     MPI.Init()
     mumps = Mumps{Float64}(mumps_unsymmetric, default_icntl, default_cntl64)
-    MUMPS.set_icntl!(mumps,4,0)
+    # MUMPS.set_icntl!(mumps,4,0)
     associate_matrix!(mumps, A)
     factorize!(mumps)
 
