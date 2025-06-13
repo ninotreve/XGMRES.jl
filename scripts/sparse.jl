@@ -2,13 +2,13 @@
 # Author: Bastien Vieublé
 # Email: bastien.vieuble@amss.ac.cn
 # Github: https://github.com/bvieuble/XGMRES.jl
-# COMMAND: sh scripts/scripts.sh sparse.jl 
+# COMMAND: sh scripts/scripts.sh sparse.jl
 # OR julia --project=$PATH_TO_ROOT sparse.jl
 
 using XGMRES, SparseArrays, LinearAlgebra, Quadmath, Random, Printf, BFloat16s,
       MatrixMarket, SuiteSparseMatrixCollection;
 
-# Set the different floating-point precisions 
+# Set the different floating-point precisions
 b = BFloat16;
 h = Float16;
 s = Float32;
@@ -42,9 +42,9 @@ bstop = Float64(eps(u)); fstop = Float64(eps(u)) * 100
 precond = create_precond_spai(A, uₓ, uₐ, uₘ; kind=kind, ϵ=0.4, β = 8, α=round(Int64, n / 8, RoundUp));
 # precond = create_precond_poly(A,bₑ,uₓ,uₐ,uₘ;deg=50);
 
-# Call xgmres 
+# Call xgmres
 xcomp, stats = xgmres(Aₜ, bₜ, precond=precond, kind=kind, xexact=xexactₜ,
-                      maxrestrt=20, m=n, bstop=bstop, fstop=fstop, 
+                      maxrestrt=20, m=n, bstop=bstop, fstop=fstop,
                       τ=1e-6, verbose=true, u=u, uᵣ=uᵣ, uₛ=uₛ, stop=0.9,
                       do_stats=true, do_κ=false);
 

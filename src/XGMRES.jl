@@ -8,12 +8,12 @@ module XGMRES
 import Base: *
 
 using LinearAlgebra, SparseArrays, Random, Quadmath, Printf, IncompleteLU,
-    AlgebraicMultigrid, BFloat16s, ILUZero
+    AlgebraicMultigrid, BFloat16s, ILUZero, MUMPS, MPI, SparseArrays;
 
 export xgmres, Preconditioner, create_precond_I, gen_mat, gen_mat_with_prec,
     create_precond_rand, xconvert, create_precond_ilu, create_precond_lu,
-    create_precond_amg, create_precond_spai, create_precond_poly, 
-    create_precond_ilu0, create_precond_rand_inv
+    create_precond_amg, create_precond_spai, create_precond_poly,
+    create_precond_ilu0, create_precond_rand_inv, create_precond_mumps
 
 include("aux.jl")
 include("rand_mat.jl")
@@ -24,97 +24,97 @@ include("preconditioner.jl")
 """
 ```julia
 x::Vector{u}, stats::Dict = xgmres(
-    A         ::AbstractMatrix{TA},                  
-    b         ::AbstractVector{TB};                  
-    precond   ::Preconditioner            = nothing, 
-    kind      ::String                    = "left",  
-    xexact    ::Union{Vector{TX},Nothing} = nothing, 
-    maxrestrt ::Union{Integer,   Nothing} = nothing, 
-    m         ::Union{Integer,   Nothing} = nothing, 
-    τ         ::Union{Float64,   Nothing} = nothing, 
-    bstop     ::Union{Float64,   Nothing} = nothing, 
-    fstop     ::Union{Float64,   Nothing} = nothing, 
-    stop      ::Union{Float64,   Nothing} = nothing, 
-    verbose   ::Bool                      = true,    
-    do_stats  ::Bool                      = false,   
-    do_κ      ::Bool                      = false,   
-    u         ::DataType                  = Float64, 
-    uᵣ        ::DataType                  = Float64, 
-    uₛ        ::DataType                  = Float64, 
-    maxmem    ::Float64                   = 3*1e9    
+    A         ::AbstractMatrix{TA},
+    b         ::AbstractVector{TB};
+    precond   ::Preconditioner            = nothing,
+    kind      ::String                    = "left",
+    xexact    ::Union{Vector{TX},Nothing} = nothing,
+    maxrestrt ::Union{Integer,   Nothing} = nothing,
+    m         ::Union{Integer,   Nothing} = nothing,
+    τ         ::Union{Float64,   Nothing} = nothing,
+    bstop     ::Union{Float64,   Nothing} = nothing,
+    fstop     ::Union{Float64,   Nothing} = nothing,
+    stop      ::Union{Float64,   Nothing} = nothing,
+    verbose   ::Bool                      = true,
+    do_stats  ::Bool                      = false,
+    do_κ      ::Bool                      = false,
+    u         ::DataType                  = Float64,
+    uᵣ        ::DataType                  = Float64,
+    uₛ        ::DataType                  = Float64,
+    maxmem    ::Float64                   = 3*1e9
 ) where {TA<:AbstractFloat,TB<:AbstractFloat,TX<:AbstractFloat}
 ```
-Solve the linear system ``Ax=b`` with mixed precision restarted preconditioned 
+Solve the linear system ``Ax=b`` with mixed precision restarted preconditioned
 GMRES, where ``A\\in\\mathbb{R}^{n\\times n}`` and ``x,b \\in\\mathbb{R}^n``.
-The function requires three precision parameters and repeats the three 
+The function requires three precision parameters and repeats the three
 following steps until convergence:
 1. Compute the residual ``r_i = b-Ax_i`` in precision ``u_r``
-2. Solve ``A d_i = r_i/||r_i||_{\\infty}`` with preconditioned GMRES run in 
+2. Solve ``A d_i = r_i/||r_i||_{\\infty}`` with preconditioned GMRES run in
    precision ``u_s``
-3. Update the solution ``x_{i+1} = x_i + ||r_i||_{\\infty}\\times d_i`` in 
+3. Update the solution ``x_{i+1} = x_i + ||r_i||_{\\infty}\\times d_i`` in
    precision ``u``
 
-The precisions ``u_r`` and ``u``  concern, respectively, the precisions at 
-which the residual (step 1) and the update of the solution (step 3) are 
+The precisions ``u_r`` and ``u``  concern, respectively, the precisions at
+which the residual (step 1) and the update of the solution (step 3) are
 computed. The precision ``u_s`` is the precision at which all the operations of
 the inner GMRES, except the preconditioned matrix-vector product, are computed
-(step 2). The preconditioned matrix-vector product should be provided through 
+(step 2). The preconditioned matrix-vector product should be provided through
 the `precond` parameter.
 
 !!! note "Preconditioned matrix-vector product"
-    The preconditioned matrix-vector product can use its own set of precisions 
-    and does not have to be implemented in precision ``uₛ``. One should use 
-    the `Preconditioner` structure provided by the package to implement it or 
-    use provided implementations by the package. 
+    The preconditioned matrix-vector product can use its own set of precisions
+    and does not have to be implemented in precision ``uₛ``. One should use
+    the `Preconditioner` structure provided by the package to implement it or
+    use provided implementations by the package.
 
-The algorithm is composed of two imbricated loops: the outer restart loop and 
+The algorithm is composed of two imbricated loops: the outer restart loop and
 the inner GMRES iterations.
 The restart loop is stopped if:
   * We reached the maximum number of restart iterations `maxrestrt`.
-  * We observe no significant error reduction over three consecutives 
+  * We observe no significant error reduction over three consecutives
     iterations. This is quantified
-    by the parameter `stop` which defines the maximum acceptable ratio between 
-    the forward errors of two consecutive iterations. 
-  * We reached the expected accuracies on the forward and backward errors 
+    by the parameter `stop` which defines the maximum acceptable ratio between
+    the forward errors of two consecutive iterations.
+  * We reached the expected accuracies on the forward and backward errors
     defined by the parameters `fstop` and `bstop`.
-If the parameter `xexact` is not provided, the forward error is not computed, 
-and the above stopping criterion are solely based on the computed backward 
-error. The backward and forward error of the linear system are computed, 
+If the parameter `xexact` is not provided, the forward error is not computed,
+and the above stopping criterion are solely based on the computed backward
+error. The backward and forward error of the linear system are computed,
 respectively, as follows:
 
-\$\\frac{||Ax_i-b||_{\\infty}}{||A||_{\\infty}||x_i||_{\\infty} + 
+\$\\frac{||Ax_i-b||_{\\infty}}{||A||_{\\infty}||x_i||_{\\infty} +
 ||b||_{\\infty}},\$
 
 \$\\frac{||x_i - x||_{\\infty}}{||x||_{\\infty}}.\$
 
 The inner GMRES loop is stopped if:
   * We reached the maximum number of GMRES iterations `m`.
-  * The backward error of the preconditioned system ``Ad_i=r_i`` falls below a 
+  * The backward error of the preconditioned system ``Ad_i=r_i`` falls below a
     given tolerance defined by the paramter `τ`.
 
 The backward error of the preconditioned system is computed as follows:
 
 \$\\frac{||M^{-1}(Ad_{i,j} - r_i/||r_i||_{\\infty})||_{\\infty}}{||M^{-1}r_i/
-||r_i||_{\\infty}||_{\\infty}} \\qquad \\text{(left-preconditioned)}\$ 
+||r_i||_{\\infty}||_{\\infty}} \\qquad \\text{(left-preconditioned)}\$
 
 \$\\frac{||Ad_{i,j} - r_i/||r_i||_{\\infty})||_{\\infty}}{||r_i/
-||r_i||_{\\infty}||_{\\infty}} \\qquad \\text{(right-preconditioned)}\$ 
+||r_i||_{\\infty}||_{\\infty}} \\qquad \\text{(right-preconditioned)}\$
 
 !!! note "Right-preconditioned backward error"
     The backward error of the right-preconditioned system is the backward error
     of the original system ``A d_i = r_i/||r_i||_{\\infty}``.
 
-Through the parameter `do_stats`, it can be asked to the function to compute 
-the backward errors of the original system \$Ax=b\$ for each iteration of GMRES. 
-The forward errors are also computed if the exact solution of the system is 
-provided through the parameter `xexact`. The condition numbers of the 
-preconditioner \$M\$ and the preconditioned matrix \$AM\$ or \$MA\$ can also be computed through 
+Through the parameter `do_stats`, it can be asked to the function to compute
+the backward errors of the original system \$Ax=b\$ for each iteration of GMRES.
+The forward errors are also computed if the exact solution of the system is
+provided through the parameter `xexact`. The condition numbers of the
+preconditioner \$M\$ and the preconditioned matrix \$AM\$ or \$MA\$ can also be computed through
 another parameter `do_κ`. In cases where the condition number is too
 expensive or impossible to compute, `do_κ` can be set to `false`.
 
 !!! warning "Stats mode"
-    The stat mode increases substantially the resource comsumption and is only 
-    relevant for numerical study of the algorithm. It is not intended to be 
+    The stat mode increases substantially the resource comsumption and is only
+    relevant for numerical study of the algorithm. It is not intended to be
     used in practice.
 
 **Input arguments**
@@ -124,31 +124,31 @@ expensive or impossible to compute, `do_κ` can be set to `false`.
 
 **Keyword arguments**
 
-  - `precond`: A [`Preconditioner`](@ref) object embedding the linear operators 
+  - `precond`: A [`Preconditioner`](@ref) object embedding the linear operators
     used for preconditioning
   - `kind`: Set the kind of preconditioning ("left", "right", or "flexible")
-  - `xexact`: Exact solution of the system. If provided the forward error is 
+  - `xexact`: Exact solution of the system. If provided the forward error is
     computed in stat mode.
   - `maxrestrt`: Maximum number of restart iterations.
   - `m`: Maxmum number of inner GMRES iterations.
-  - `τ`: Stopping criterion for the inner iterations of GMRES based on the 
+  - `τ`: Stopping criterion for the inner iterations of GMRES based on the
     backward error of the correction system ``A d_i = r_i/||r_i||_{\\infty}``.
-  - `bstop`: Stopping criterion for the outer restart iterations based on the 
+  - `bstop`: Stopping criterion for the outer restart iterations based on the
     backward error of the original system ``A x_i = b``.
-  - `fstop`: Stopping criterion for the outer restart iterations based on the 
+  - `fstop`: Stopping criterion for the outer restart iterations based on the
     forward error of the original system.
-  - `stop`: Stopping criterion for the outer restart iterations based on the 
+  - `stop`: Stopping criterion for the outer restart iterations based on the
     based on the non-improvement of the forward error over 3 iterations. If the
-    forward error is not improved by a ratio higher than `stop` for three 
+    forward error is not improved by a ratio higher than `stop` for three
     consecutive restart iterations, the algorithm is stopped.
   - `verbose`: Information and convergence logs are displayed at each iteration.
   - `do_stats`: Activate the stats mode and get many more logs.
   - `do_κ`: Compute the condition numbers of the preconditioner ``M`` and the
-    preconditioned matrix ``AM`` or ``MA`` (depending on the kind of 
+    preconditioned matrix ``AM`` or ``MA`` (depending on the kind of
     preconditioning used).
   - `u`: Precision at which the update ``x_{i+1} = x_{i} + d_{i}`` is computed.
   - `uᵣ`: Precision at which the residual ``Ax_{i+1} - b`` is computed.
-  - `uₛ`: Precision at which the operations in the inner loop of GMRES are 
+  - `uₛ`: Precision at which the operations in the inner loop of GMRES are
     computed.
   - `maxmem`: Use to set `m` if `m` is not provided in argument. It chooses `m`
     such that the memory used to store the Krylov bases is lower than `maxmem`.
@@ -222,7 +222,7 @@ function xgmres(
     end
 
     if (eltype(A) != uᵣ)
-        Aᵣ = xconvert(uᵣ, A)
+        Aᵣ = convert(SparseMatrixCSC{uᵣ, Int}, A)
     else
         Aᵣ = A
     end
@@ -256,8 +256,8 @@ function xgmres(
     x = bprec
 
     if do_κ
-        # Compute the norms of the preconditioned right-hand side and matrix 
-        # for the computation of the preconditioned backward error. Compute the 
+        # Compute the norms of the preconditioned right-hand side and matrix
+        # for the computation of the preconditioned backward error. Compute the
         # conditiion number of M and AM/MA.
         if kind == "left"
             MA = precond.MA()
@@ -285,7 +285,7 @@ function xgmres(
                 end
             end
             @printf("Condition numbers of M and MA: \n")
-            @printf("κ(M) = %.2e --- κ(MA) = %.2e \n\n", stats["K(M)"], 
+            @printf("κ(M) = %.2e --- κ(MA) = %.2e \n\n", stats["K(M)"],
                     stats["K(MA)"])
         else
             AM = precond.AM()
@@ -313,12 +313,12 @@ function xgmres(
                 end
             end
             @printf("Condition numbers of M and AM: \n")
-            @printf("κ(M) = %.2e --- κ(AM) = %.2e \n\n", stats["K(M)"], 
+            @printf("κ(M) = %.2e --- κ(AM) = %.2e \n\n", stats["K(M)"],
                     stats["K(AM)"])
         end
     else
-        # For convenience, if the do_κ is not activated we still initialize the 
-        # variable AprecnrmInf and bprecnrmInf for the preconditioned backward 
+        # For convenience, if the do_κ is not activated we still initialize the
+        # variable AprecnrmInf and bprecnrmInf for the preconditioned backward
         # error to be computed and displayed. However, for the left-preconditioned
         # case, the preconditioned backward error displayed won't be good.
         bprecnrmInf = bnrmInf
@@ -418,7 +418,7 @@ function xgmres(
             collect_stats(stats, stat)
 
             for k = 1:i
-                Hₛ[k, i] = wₛ' * Vₛ[:, k]
+                Hₛ[k, i] = dot(wₛ, Vₛ[:, k])
                 wₛ = wₛ - Hₛ[k, i] * Vₛ[:, k]
             end
             Hₛ[i+1, i] = norm(wₛ, 2)
@@ -465,7 +465,7 @@ function xgmres(
 
             if (verbose && do_stats && xexact !== nothing)
                 @printf("       ---> it: %2d --- tol err = %.5e --- bkw = %.5e \
-                        --- fwd = %.5e \n", i, err, bkwall[end], 
+                        --- fwd = %.5e \n", i, err, bkwall[end],
                         fwdall[end])
             elseif (verbose && do_stats)
                 @printf("       ---> it: %2d --- tol err = %.5e --- bkw = %.5e \n",
@@ -525,7 +525,7 @@ function xgmres(
 end
 
 # NOTE: Added for the julia LSP to cover the .jl files in the scripts/ folder.
-#       It can be safely removed. See: 
+#       It can be safely removed. See:
 #       https://discourse.julialang.org/t/lsp-missing-reference-woes/98231/8
 macro ignore(args...) end
 
